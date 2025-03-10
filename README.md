@@ -1,4 +1,4 @@
-# Guide de mise en place de Cypress avec GitHub Actions (test commit)
+# Guide de mise en place de Cypress avec GitHub Actions
 
 Ce dépôt est un exemple pratique d'intégration de Cypress avec GitHub Actions pour l'automatisation des tests d'interface utilisateur, avec la fonctionnalité de capture d'écran. Suivez ce guide pour mettre en place Cypress sur votre propre projet front-end.
 
