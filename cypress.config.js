@@ -1,25 +1,34 @@
-// cypress.config.js
 const { defineConfig } = require('cypress')
 
 module.exports = defineConfig({
   e2e: {
     baseUrl: 'http://localhost:3000',
     setupNodeEvents(on, config) {
-      // implement node event listeners here
       on('task', {
         log(message) {
           console.log(message)
           return null
         }
       })
+      
+      // Configuration pour générer un rapport JSON
+      on('after:run', (results) => {
+        if (results) {
+          // Créer un dossier de rapport si nécessaire
+          require('fs').mkdirSync('cypress', { recursive: true })
+          // Écrire les résultats dans un fichier JSON
+          require('fs').writeFileSync(
+            'cypress/results.json',
+            JSON.stringify({ results }, null, 2)
+          )
+        }
+      })
     },
-    // Activation des captures d'écran
     screenshotOnRunFailure: true,
     trashAssetsBeforeRuns: true,
     supportFile: 'cypress/support/e2e.js',
     specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
   },
-  // Configuration des captures d'écran
   screenshotsFolder: 'cypress/screenshots',
   videosFolder: 'cypress/videos',
   downloadsFolder: 'cypress/downloads',
