@@ -12,6 +12,7 @@ module.exports = defineConfig({
       })
       
       // Configuration pour générer un rapport JSON
+      // test
       on('after:run', (results) => {
         if (results) {
           // Créer un dossier de rapport si nécessaire
