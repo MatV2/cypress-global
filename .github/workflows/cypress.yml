@@ -1,5 +1,11 @@
 name: Cypress Screenshots CI
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  actions: read
+
 on:
   push:
     branches: [ main ]
