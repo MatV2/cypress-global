@@ -39,7 +39,9 @@ jobs:
           name: cypress-screenshots
           path: cypress/screenshots
           retention-days: 30
-      
+      - name: Install jq for JSON processing
+        run: sudo apt-get install jq -y
+        
       - name: Generate Test Report
         if: always()
         run: |
