@@ -61,7 +61,7 @@ jobs:
                     
           if [ -f "cypress/results.json" ]; then
             echo "#### Détails des tests" >> test-report.md
-            failedTests=$(jq '.results[].suites[].tests[] | select(.state == "failed") | .title' cypress/results.json -r)
+            failedTests=$(jq '.stats.failures[] | select(.state == "failed") | .title' cypress/results.json -r 2>/dev/null || echo "")
             if [ ! -z "$failedTests" ]; then
               echo "Tests échoués:" >> test-report.md
               echo "$failedTests" | while read -r test; do
