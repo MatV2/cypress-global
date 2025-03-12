@@ -6,7 +6,6 @@ on:
   pull_request:
     branches: [ main ]
   workflow_dispatch:
-    # Permet de déclencher manuellement le workflow
 
 jobs:
   cypress-run:
@@ -24,12 +23,14 @@ jobs:
         run: npm install
       
       - name: Cypress run
+        id: cypress
         uses: cypress-io/github-action@v6
         with:
           build: npm run build
           start: npm start
           wait-on: 'http://localhost:3000'
           wait-on-timeout: 120
+        continue-on-error: true
       
       - name: Upload Screenshots
         uses: actions/upload-artifact@v4
@@ -39,19 +40,80 @@ jobs:
           path: cypress/screenshots
           retention-days: 30
       
-      - name: Generate Screenshot Report
+      - name: Generate Test Report
         if: always()
         run: |
-          echo "## Cypress Screenshots Report" > screenshot-report.md
-          echo "Screenshots générées pendant les tests Cypress" >> screenshot-report.md
-          find cypress/screenshots -type f -name "*.png" | while read -r file; do
-            echo "- $(basename "$file")" >> screenshot-report.md
-          done
+          echo "## Cypress Test Report" > test-report.md
+          echo "Tests exécutés le $(date)" >> test-report.md
+          echo "### Résultats des tests" >> test-report.md
+          
+          if [ -d "cypress/screenshots" ]; then
+            echo "#### Captures d'écran des tests échoués" >> test-report.md
+            find cypress/screenshots -type f -name "*.png" | while read -r file; do
+              testName=$(basename "$(dirname "$file")")
+              echo "- Test: $testName - $(basename "$file")" >> test-report.md
+            done
+          fi
+          
+          if [ -f "cypress/results.json" ]; then
+            echo "#### Détails des tests" >> test-report.md
+            failedTests=$(jq '.results[].suites[].tests[] | select(.state == "failed") | .title' cypress/results.json -r)
+            if [ ! -z "$failedTests" ]; then
+              echo "Tests échoués:" >> test-report.md
+              echo "$failedTests" | while read -r test; do
+                echo "- $test" >> test-report.md
+              done
+            fi
+          fi
       
-      - name: Upload Screenshot Report
-        if: always()
+      - name: Upload Test Report
         uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: screenshot-report
-          path: screenshot-report.md
+          name: test-report
+          path: test-report.md
           retention-days: 30
+      
+      - name: Create GitHub Issue on Test Failure
+        if: failure() || steps.cypress.outcome == 'failure'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            
+            // Lecture du rapport de test s'il existe
+            let reportContent = "Échec des tests Cypress";
+            try {
+              if (fs.existsSync('test-report.md')) {
+                reportContent = fs.readFileSync('test-report.md', 'utf8');
+              }
+            } catch (error) {
+              console.error('Erreur lors de la lecture du rapport:', error);
+            }
+            
+            // Créer l'issue GitHub
+            const issueTitle = `Échec des tests Cypress - ${new Date().toISOString().split('T')[0]}`;
+            
+            // Ajout des informations du workflow
+            const workflowInfo = `
+            **Informations du workflow:**
+            - Workflow: ${process.env.GITHUB_WORKFLOW}
+            - Run ID: ${process.env.GITHUB_RUN_ID}
+            - Run Number: ${process.env.GITHUB_RUN_NUMBER}
+            - Triggered by: ${process.env.GITHUB_ACTOR}
+            - SHA: ${process.env.GITHUB_SHA}
+            `;
+            
+            // Préparation du corps de l'issue
+            const issueBody = reportContent + '\n\n' + workflowInfo + '\n\n' + 
+              `[Lien vers les artefacts](https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})`;
+            
+            // Création de l'issue
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: issueTitle,
+              body: issueBody,
+              labels: ['test-failure', 'automated', 'cypress']
+            });
