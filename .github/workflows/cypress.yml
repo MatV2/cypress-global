@@ -41,7 +41,7 @@ jobs:
           retention-days: 30
       - name: Install jq for JSON processing
         run: sudo apt-get install jq -y
-        
+
       - name: Generate Test Report
         if: always()
         run: |
@@ -53,10 +53,12 @@ jobs:
             echo "#### Captures d'écran des tests échoués" >> test-report.md
             find cypress/screenshots -type f -name "*.png" | while read -r file; do
               testName=$(basename "$(dirname "$file")")
-              echo "- Test: $testName - $(basename "$file")" >> test-report.md
+              fileName=$(basename "$file")
+              echo "- Test: $testName - $fileName" >> test-report.md
+              echo "  - [Voir la capture d'écran](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> test-report.md
             done
           fi
-          
+                    
           if [ -f "cypress/results.json" ]; then
             echo "#### Détails des tests" >> test-report.md
             failedTests=$(jq '.results[].suites[].tests[] | select(.state == "failed") | .title' cypress/results.json -r)
