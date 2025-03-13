@@ -2,7 +2,7 @@
 
 describe('Page d\'accueil SportShop', () => {
     beforeEach(() => {
-      // Visite la page d'accueil avant chaque test
+      // Visite la page via le serveur HTTP
       cy.visit('/')
       // Prise de capture d'écran initiale
       cy.screenshot('page-accueil')
