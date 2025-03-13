@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "http-server . -p 8080",
-    "test": "start-server-and-test 'http-server . -p 8080' http://localhost:8080 cypress:run",
+    "pretest": "http-server . -p 8080 --silent &",
+    "test": "cypress run",
+    "posttest": "pkill -f http-server || taskkill /F /IM node.exe /FI \"WINDOWTITLE eq http-server*\" || true",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
     "build": "echo 'No build step needed'"
