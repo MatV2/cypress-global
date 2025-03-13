@@ -4,11 +4,10 @@
   "description": "Projet fictif pour démonstration de Cypress avec CI/CD",
   "main": "index.js",
   "scripts": {
-    "test": "cypress run",
+    "start": "http-server . -p 8080",
+    "test": "start-server-and-test start http://localhost:8080 cypress:run",
     "cypress:open": "cypress open",
-    "cypress:run": "cypress run",
-    "start": "serve -s public -p 3000",
-    "build": "mkdir -p public && echo '<html><body><h1>Projet de démonstration Cypress</h1></body></html>' > public/index.html"
+    "cypress:run": "cypress run"
   },
   "keywords": [
     "cypress",
@@ -19,6 +18,7 @@
   "license": "ISC",
   "devDependencies": {
     "cypress": "^14.1.0",
-    "serve": "^14.2.4"
+    "http-server": "^14.1.1",
+    "start-server-and-test": "^2.0.10"
   }
 }
